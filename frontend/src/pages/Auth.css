@@ -1,0 +1,22 @@
+.auth-page { min-height: calc(100vh - 64px); display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.auth-card { width: 100%; max-width: 440px; }
+.auth-logo { display: flex; align-items: center; gap: 10px; font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; margin-bottom: 24px; }
+.auth-logo .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+.auth-card h1 { font-size: 1.8rem; margin-bottom: 4px; }
+.auth-subtitle { color: var(--text-secondary); margin-bottom: 24px; }
+.input-icon-wrap { position: relative; }
+.input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.input-with-icon { padding-left: 38px !important; }
+.input-with-icon-right { padding-right: 40px !important; }
+.eye-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+.eye-btn:hover { color: var(--text-primary); }
+.auth-switch { text-align: center; margin-top: 20px; color: var(--text-secondary); font-size: 0.9rem; }
+.auth-switch a, .auth-terms a { color: var(--accent); text-decoration: none; }
+.auth-switch a:hover, .auth-terms a:hover { text-decoration: underline; }
+.auth-terms { text-align: center; margin-top: 12px; color: var(--text-muted); font-size: 0.8rem; }
+.role-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 24px; }
+.role-btn { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-family: var(--font-body); font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+.role-btn.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); }
+.role-btn:hover:not(.active) { border-color: var(--border-light); color: var(--text-primary); }
+.demo-btns { display: flex; gap: 8px; margin-bottom: 20px; }
+.demo-btns .btn { flex: 1; justify-content: center; font-size: 0.78rem; }
