@@ -1,29 +1,30 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const User = require('../models/User');
-const { auth } = require('../middleware/auth');
+const User = require("../models/User");
+const { auth } = require("../middleware/auth");
 
-// Get user profile by ID
-router.get('/:id', async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password -savedJobs');
-    if (!user || !user.isActive) return res.status(404).json({ message: 'User not found' });
+    const user = await User.findById(req.params.id).select(
+      "-password -savedJobs",
+    );
+    if (!user || !user.isActive)
+      return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
-// Save/unsave job
-router.get('/saved-jobs/list', auth, async (req, res) => {
+router.get("/saved-jobs/list", auth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id).populate({
-      path: 'savedJobs',
-      match: { status: 'active' }
+      path: "savedJobs",
+      match: { status: "active" },
     });
     res.json(user.savedJobs);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
 
