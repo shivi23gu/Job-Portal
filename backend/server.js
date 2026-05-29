@@ -10,8 +10,11 @@ const app = express();
 
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production" ? false : "http://localhost:3000",
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "https://job-portal-1t8k.vercel.app",
+    ],
     credentials: true,
   }),
 );
