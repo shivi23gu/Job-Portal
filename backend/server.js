@@ -33,18 +33,20 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "OK", message: "Job Portal API is running" });
 });
 
-mongoose
-  .connect(process.env.MONGO_URI || "mongodb://localhost:27017/jobportal")
-  .then(() => {
-    console.log("MongoDB Connected");
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("MongoDB connection error:", err.message);
-    process.exit(1);
+// Vercel ke liye mongoose connect alag karo
+const connectDB = async () => {
+  if (mongoose.connections[0].readyState) return;
+  await mongoose.connect(process.env.MONGO_URI);
+};
+
+connectDB().catch(console.error);
+
+// Local development ke liye
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
   });
+}
 
 module.exports = app;
