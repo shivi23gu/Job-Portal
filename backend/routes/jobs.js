@@ -23,7 +23,14 @@ router.get("/", async (req, res) => {
     } = req.query;
 
     const query = { status: "active" };
-    if (search) query.$text = { $search: search };
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { company: { $regex: search, $options: "i" } },
+        { skills: { $regex: search, $options: "i" } },
+      ];
+    }
     if (location) query.location = { $regex: location, $options: "i" };
     if (type) query.type = type;
     if (category) query.category = category;
