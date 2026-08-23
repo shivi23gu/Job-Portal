@@ -63,6 +63,7 @@ router.post(
 
       res.status(201).json({
         success: true,
+        token,
         user: user.toJSON(),
         message: "Registration successful!",
       });
@@ -110,6 +111,7 @@ router.post(
 
       res.json({
         success: true,
+        token,
         user: user.toJSON(),
         message: "Login successful!",
       });

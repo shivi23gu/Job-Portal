@@ -30,6 +30,7 @@ export function AuthProvider({ children }) {
 
     // Listen for unauthorized 401 events dispatched by Axios response interceptor
     const handleUnauthorized = () => {
+      localStorage.removeItem("token");
       setUser(null);
     };
 
@@ -41,6 +42,9 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     const { data } = await api.post("/api/auth/login", { email, password });
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+    }
     const userData = data.user || data;
     setUser(userData);
     return data;
@@ -48,6 +52,9 @@ export function AuthProvider({ children }) {
 
   const register = async (userData) => {
     const { data } = await api.post("/api/auth/register", userData);
+    if (data.token) {
+      localStorage.setItem("token", data.token);
+    }
     const registeredUser = data.user || data;
     setUser(registeredUser);
     return data;
@@ -59,6 +66,7 @@ export function AuthProvider({ children }) {
     } catch (err) {
       console.error("Logout request error:", getErrorMessage(err));
     } finally {
+      localStorage.removeItem("token");
       setUser(null);
     }
   };

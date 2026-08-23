@@ -29,6 +29,18 @@ export const getErrorMessage = (
   return fallback;
 };
 
+// Request Interceptor: Attach Authorization Bearer token as fallback for cross-domain cookie restrictions
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
+
 // Response Interceptor for Centralized Authentication & Error Handling
 api.interceptors.response.use(
   (response) => response,
