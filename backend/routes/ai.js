@@ -10,7 +10,7 @@ const Job = require("../models/Job");
 router.use(aiLimiter);
 
 const getGroqModel = () => {
-  return process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+  return process.env.GROQ_MODEL || "openai/gpt-oss-120b";
 };
 
 const callGroq = (prompt, systemPrompt = "", jsonMode = false) => {
@@ -64,10 +64,12 @@ const callGroq = (prompt, systemPrompt = "", jsonMode = false) => {
               ),
             );
           }
-          const text = parsed.choices?.[0]?.message?.content;
+          let text = parsed.choices?.[0]?.message?.content;
           if (!text) {
             return reject(new Error("No response returned from Groq AI."));
           }
+          // Strip any internal reasoning tags if present
+          text = text.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
           resolve(text);
         } catch (e) {
           reject(new Error("Failed to parse Groq response: " + e.message));
