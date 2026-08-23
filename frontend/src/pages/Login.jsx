@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Mail, Lock, Briefcase, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { getErrorMessage } from "../services/api";
 
 export default function Login() {
   const { login } = useAuth();
@@ -19,7 +20,7 @@ export default function Login() {
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Login failed");
+      toast.error(getErrorMessage(err, "Login failed"));
     } finally {
       setLoading(false);
     }

@@ -28,4 +28,21 @@ router.get("/saved-jobs/list", auth, async (req, res) => {
   }
 });
 
+router.put("/profile", auth, async (req, res) => {
+  try {
+    const { name, profile, company, avatar } = req.body;
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+    if (name) user.name = name;
+    if (avatar !== undefined) user.avatar = avatar;
+    if (profile) user.profile = { ...user.profile, ...profile };
+    if (company && user.role === "employer")
+      user.company = { ...user.company, ...company };
+    await user.save();
+    res.json({ user: user.toJSON(), message: "Profile updated successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
 module.exports = router;

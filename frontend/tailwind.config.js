@@ -22,8 +22,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ["Syne", "sans-serif"],
-        body: ["DM Sans", "sans-serif"],
+        display: ["Roboto","sans-serif"],
+        body: [ "Roboto","sans-serif"],
       },
     },
   },

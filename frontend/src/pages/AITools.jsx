@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { Link } from "react-router-dom";
+import api, { getErrorMessage } from "../services/api";
 import toast from "react-hot-toast";
 import {
   Sparkles,
@@ -106,7 +107,7 @@ export default function AITools() {
     try {
       let data;
       if (activeTool === "cover-letter") {
-        const res = await axios.post("/api/ai/generate-cover-letter", {
+        const res = await api.post("/api/ai/generate-cover-letter", {
           ...clForm,
           userProfile: {
             name: user.name,
@@ -117,33 +118,33 @@ export default function AITools() {
         });
         data = { type: "cover-letter", content: res.data.coverLetter };
       } else if (activeTool === "career-advice") {
-        const res = await axios.post("/api/ai/career-advice", {
+        const res = await api.post("/api/ai/career-advice", {
           question,
           userProfile: user.profile,
         });
         data = { type: "text", content: res.data.advice };
       } else if (activeTool === "resume-analyzer") {
-        const res = await axios.post("/api/ai/analyze-resume", {
+        const res = await api.post("/api/ai/analyze-resume", {
           resumeText,
           targetRole,
         });
         data = { type: "resume-analysis", content: res.data };
       } else if (activeTool === "job-match") {
-        const res = await axios.post("/api/ai/job-match", {
+        const res = await api.post("/api/ai/job-match", {
           userSkills: user.profile?.skills || [],
           experience: user.profile?.experience?.[0]?.position || "Professional",
           ...matchForm,
         });
         data = { type: "job-match", content: res.data.matches };
       } else if (activeTool === "interview-prep") {
-        const res = await axios.post("/api/ai/interview-prep", interviewForm);
+        const res = await api.post("/api/ai/interview-prep", interviewForm);
         data = { type: "interview-prep", content: res.data };
       }
       setResult(data);
       toast.success("AI analysis complete!");
     } catch (err) {
       toast.error(
-        err.response?.data?.message || "AI service error. Check your API key.",
+        getErrorMessage(err, "AI service error. Check your API key."),
       );
     } finally {
       setLoading(false);
@@ -157,7 +158,7 @@ export default function AITools() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 text-accent px-4 py-1.5 rounded-full text-sm mb-4">
-            <Sparkles size={14} /> Powered by Claude AI
+            <Sparkles size={14} /> Powered by Groq AI
           </div>
           <h1 className="font-display text-3xl font-bold text-white mb-2">
             AI Career Tools
@@ -205,7 +206,7 @@ export default function AITools() {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-4">
+          <div className="flex-1 flex flex-col gap-8">
             <div className="bg-[#111827] border border-[#1e3a5f] rounded-xl p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div
@@ -471,46 +472,112 @@ export default function AITools() {
                 )}
 
                 {result.type === "resume-analysis" && (
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-4 bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4">
-                      <div className="text-4xl font-display font-bold text-accent">
-                        {result.content.score}
-                      </div>
-                      <div>
-                        <div className="text-white font-medium">
-                          Overall Score
+                  <div className="flex flex-col gap-5">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex items-center gap-4 bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4">
+                        <div className="text-4xl font-display font-bold text-accent">
+                          {result.content.overallScore || result.content.score || 0}
                         </div>
-                        <div className="text-slate-400 text-sm">out of 100</div>
+                        <div>
+                          <div className="text-white font-medium">
+                            Overall Score
+                          </div>
+                          <div className="text-slate-400 text-xs">out of 100</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4 bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4">
+                        <div className="text-4xl font-display font-bold text-green-400">
+                          {result.content.atsScore || 0}
+                        </div>
+                        <div>
+                          <div className="text-white font-medium">
+                            ATS Score
+                          </div>
+                          <div className="text-slate-400 text-xs">Readability & Match</div>
+                        </div>
                       </div>
                     </div>
+
+                    {result.content.summary && (
+                      <div className="bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4">
+                        <h4 className="text-slate-300 font-medium text-xs uppercase tracking-wider mb-2">
+                          Assessment Summary
+                        </h4>
+                        <p className="text-slate-300 text-sm leading-relaxed">
+                          {result.content.summary}
+                        </p>
+                      </div>
+                    )}
+
                     {result.content.strengths?.length > 0 && (
                       <div>
                         <h4 className="text-green-400 font-medium text-sm mb-2">
-                          Strengths
+                          Key Strengths
                         </h4>
-                        {result.content.strengths.map((s, i) => (
-                          <p
-                            key={i}
-                            className="text-slate-300 text-sm py-1 border-b border-[#1e3a5f] last:border-0"
-                          >
-                            {s}
-                          </p>
-                        ))}
+                        <div className="flex flex-col gap-1.5">
+                          {result.content.strengths.map((s, i) => (
+                            <div
+                              key={i}
+                              className="text-slate-300 text-sm py-1.5 px-3 bg-[#0f1f35] border border-[#1e3a5f] rounded-lg"
+                            >
+                              ✓ {s}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
+
                     {result.content.improvements?.length > 0 && (
                       <div>
                         <h4 className="text-orange-400 font-medium text-sm mb-2">
-                          Improvements
+                          Areas for Improvement
                         </h4>
-                        {result.content.improvements.map((s, i) => (
-                          <p
-                            key={i}
-                            className="text-slate-300 text-sm py-1 border-b border-[#1e3a5f] last:border-0"
-                          >
-                            {s}
-                          </p>
-                        ))}
+                        <div className="flex flex-col gap-1.5">
+                          {result.content.improvements.map((s, i) => (
+                            <div
+                              key={i}
+                              className="text-slate-300 text-sm py-1.5 px-3 bg-[#0f1f35] border border-[#1e3a5f] rounded-lg"
+                            >
+                              • {s}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {result.content.missingKeywords?.length > 0 && (
+                      <div>
+                        <h4 className="text-blue-400 font-medium text-sm mb-2">
+                          Recommended Keywords to Include
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {result.content.missingKeywords.map((k, i) => (
+                            <span
+                              key={i}
+                              className="text-xs px-2.5 py-1 rounded-md bg-blue-500/10 border border-blue-500/20 text-blue-300"
+                            >
+                              + {k}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {result.content.suggestions?.length > 0 && (
+                      <div>
+                        <h4 className="text-purple-400 font-medium text-sm mb-2">
+                          Actionable Suggestions
+                        </h4>
+                        <div className="flex flex-col gap-1.5">
+                          {result.content.suggestions.map((s, i) => (
+                            <div
+                              key={i}
+                              className="text-slate-300 text-sm py-1.5 px-3 bg-[#0f1f35] border border-[#1e3a5f] rounded-lg"
+                            >
+                              💡 {s}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -519,42 +586,138 @@ export default function AITools() {
                 {result.type === "job-match" &&
                   Array.isArray(result.content) && (
                     <div className="flex flex-col gap-3">
-                      {result.content.map((match, i) => (
-                        <div
-                          key={i}
-                          className="bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="font-medium text-white text-sm">
-                              {match.title}
+                      {result.content.length === 0 ? (
+                        <p className="text-slate-400 text-sm text-center py-6">
+                          No matching jobs found. Try updating your skills profile or searching with different criteria.
+                        </p>
+                      ) : (
+                        result.content.map((match, i) => {
+                          const job = match.job || match;
+                          return (
+                            <div
+                              key={i}
+                              className="bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4 flex flex-col gap-2"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="font-medium text-white text-sm">
+                                  {job.title || "Job Position"}
+                                </div>
+                                <span className="text-xs px-2.5 py-1 rounded-full bg-accent/15 text-accent font-semibold">
+                                  {match.matchScore}% match
+                                </span>
+                              </div>
+                              <div className="text-slate-400 text-xs">
+                                {job.company} · {job.location || "Remote"} {job.type ? `· ${job.type}` : ""}
+                              </div>
+                              {match.reason && (
+                                <p className="text-slate-400 text-xs italic bg-black/20 p-2 rounded-lg border border-white/5">
+                                  💡 {match.reason}
+                                </p>
+                              )}
+                              {job._id && (
+                                <div className="mt-1">
+                                  <Link
+                                    to={`/jobs/${job._id}`}
+                                    className="text-accent hover:underline text-xs inline-flex items-center gap-1 font-medium"
+                                  >
+                                    View Job Details →
+                                  </Link>
+                                </div>
+                              )}
                             </div>
-                            <span className="text-xs px-2.5 py-1 rounded-full bg-accent/15 text-accent">
-                              {match.matchScore}% match
-                            </span>
-                          </div>
-                          <div className="text-slate-400 text-xs">
-                            {match.company} · {match.location}
-                          </div>
-                        </div>
-                      ))}
+                          );
+                        })
+                      )}
                     </div>
                   )}
 
                 {result.type === "interview-prep" && (
-                  <div className="flex flex-col gap-3">
-                    {result.content.questions?.map((q, i) => (
-                      <div
-                        key={i}
-                        className="bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4"
-                      >
-                        <p className="text-white text-sm font-medium mb-2">
-                          {i + 1}. {q.question}
-                        </p>
-                        {q.tip && (
-                          <p className="text-slate-400 text-xs">💡 {q.tip}</p>
-                        )}
+                  <div className="flex flex-col gap-6">
+                    {result.content.technicalQuestions?.length > 0 && (
+                      <div>
+                        <h4 className="text-cyan-400 font-semibold text-sm mb-3 flex items-center gap-2">
+                          <BookOpen size={16} /> Technical Questions
+                        </h4>
+                        <div className="flex flex-col gap-3">
+                          {result.content.technicalQuestions.map((q, i) => (
+                            <div
+                              key={i}
+                              className="bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4"
+                            >
+                              <p className="text-white text-sm font-medium mb-1.5">
+                                {i + 1}. {q.question || q}
+                              </p>
+                              {q.tip && (
+                                <p className="text-slate-400 text-xs leading-relaxed">
+                                  💡 <span className="text-slate-300 font-medium">Tip:</span> {q.tip}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
+                    )}
+
+                    {result.content.behavioralQuestions?.length > 0 && (
+                      <div>
+                        <h4 className="text-purple-400 font-semibold text-sm mb-3 flex items-center gap-2">
+                          <MessageSquare size={16} /> Behavioral Questions
+                        </h4>
+                        <div className="flex flex-col gap-3">
+                          {result.content.behavioralQuestions.map((q, i) => (
+                            <div
+                              key={i}
+                              className="bg-[#0f1f35] border border-[#1e3a5f] rounded-xl p-4"
+                            >
+                              <p className="text-white text-sm font-medium mb-1.5">
+                                {i + 1}. {q.question || q}
+                              </p>
+                              {q.tip && (
+                                <p className="text-slate-400 text-xs leading-relaxed">
+                                  💡 <span className="text-slate-300 font-medium">STAR Tip:</span> {q.tip}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {result.content.questionsToAsk?.length > 0 && (
+                      <div>
+                        <h4 className="text-green-400 font-semibold text-sm mb-3 flex items-center gap-2">
+                          <Target size={16} /> Questions to Ask the Interviewer
+                        </h4>
+                        <div className="flex flex-col gap-2">
+                          {result.content.questionsToAsk.map((item, i) => (
+                            <div
+                              key={i}
+                              className="text-slate-300 text-sm py-2 px-3 bg-[#0f1f35] border border-[#1e3a5f] rounded-lg"
+                            >
+                              ❓ {typeof item === "string" ? item : item.question || JSON.stringify(item)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {result.content.preparationTips?.length > 0 && (
+                      <div>
+                        <h4 className="text-orange-400 font-semibold text-sm mb-3 flex items-center gap-2">
+                          <Star size={16} /> Key Preparation Tips
+                        </h4>
+                        <div className="flex flex-col gap-2">
+                          {result.content.preparationTips.map((tip, i) => (
+                            <div
+                              key={i}
+                              className="text-slate-300 text-sm py-2 px-3 bg-[#0f1f35] border border-[#1e3a5f] rounded-lg"
+                            >
+                              📌 {typeof tip === "string" ? tip : tip.tip || JSON.stringify(tip)}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

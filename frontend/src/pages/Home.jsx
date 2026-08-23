@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import {
   Search,
   MapPin,
@@ -39,11 +39,11 @@ export default function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios
+    api
       .get("/api/jobs/featured/list")
       .then((r) => setFeaturedJobs(r.data))
       .catch(() => {});
-    axios
+    api
       .get("/api/jobs/stats/overview")
       .then((r) => setStats(r.data))
       .catch(() => {});
@@ -79,7 +79,7 @@ export default function Home() {
             <Sparkles size={14} /> AI-Powered Job Matching
           </div>
 
-          <h1 className="font-display text-5xl md:text-6xl font-bold leading-tight mb-5">
+          <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-5">
             Find Your Dream Job
             <br />
             <span className="gradient-text">Powered by AI</span>

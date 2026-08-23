@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api, { getErrorMessage } from "../services/api";
 import toast from "react-hot-toast";
 import { Plus, X, Briefcase } from "lucide-react";
 
@@ -98,11 +98,11 @@ export default function PostJob() {
             }
           : undefined,
       };
-      await axios.post("/api/jobs", payload);
+      await api.post("/api/jobs", payload);
       toast.success("Job posted successfully!");
       navigate("/dashboard");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to post job");
+      toast.error(getErrorMessage(err, "Failed to post job"));
     } finally {
       setLoading(false);
     }

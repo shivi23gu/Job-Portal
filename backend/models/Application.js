@@ -45,5 +45,8 @@ const applicationSchema = new mongoose.Schema(
 );
 
 applicationSchema.index({ job: 1, applicant: 1 }, { unique: true });
+applicationSchema.index({ applicant: 1, createdAt: -1 });
+applicationSchema.index({ employer: 1, createdAt: -1 });
+applicationSchema.index({ job: 1, aiScore: -1, createdAt: -1 });
 
 module.exports = mongoose.model("Application", applicationSchema);

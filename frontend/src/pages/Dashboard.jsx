@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import {
   Briefcase,
   FileText,
-  Bookmark,
   Plus,
   Users,
   Eye,
@@ -35,34 +34,46 @@ export default function Dashboard() {
       try {
         if (user.role === "jobseeker") {
           const [apps, saved] = await Promise.all([
-            axios.get("/api/applications/my-applications"),
-            axios.get("/api/users/saved-jobs/list"),
+            api.get("/api/applications/my-applications"),
+            api.get("/api/users/saved-jobs/list"),
           ]);
+          const appList = Array.isArray(apps.data)
+            ? apps.data
+            : apps.data?.applications || [];
+          const savedList = Array.isArray(saved.data)
+            ? saved.data
+            : saved.data?.jobs || saved.data?.savedJobs || [];
           setData({
-            applications: apps.data,
-            savedJobs: saved.data,
+            applications: appList,
+            savedJobs: savedList,
             stats: {
-              total: apps.data.length,
-              pending: apps.data.filter((a) => a.status === "pending").length,
-              shortlisted: apps.data.filter((a) =>
+              total: apps.data?.totalApplications ?? appList.length,
+              pending: appList.filter((a) => a.status === "pending").length,
+              shortlisted: appList.filter((a) =>
                 ["shortlisted", "offered", "interviewed"].includes(a.status),
               ).length,
-              rejected: apps.data.filter((a) => a.status === "rejected").length,
+              rejected: appList.filter((a) => a.status === "rejected").length,
             },
           });
         } else {
           const [jobs, apps] = await Promise.all([
-            axios.get("/api/jobs/employer/my-jobs"),
-            axios.get("/api/applications/employer/all"),
+            api.get("/api/jobs/employer/my-jobs"),
+            api.get("/api/applications/employer/all"),
           ]);
+          const jobList = Array.isArray(jobs.data)
+            ? jobs.data
+            : jobs.data?.jobs || [];
+          const appList = Array.isArray(apps.data)
+            ? apps.data
+            : apps.data?.applications || [];
           setData({
-            jobs: jobs.data,
-            applications: apps.data,
+            jobs: jobList,
+            applications: appList,
             stats: {
-              totalJobs: jobs.data.length,
-              activeJobs: jobs.data.filter((j) => j.status === "active").length,
-              totalApps: apps.data.length,
-              pending: apps.data.filter((a) => a.status === "pending").length,
+              totalJobs: jobs.data?.total ?? jobList.length,
+              activeJobs: jobList.filter((j) => j.status === "active").length,
+              totalApps: apps.data?.totalApplications ?? appList.length,
+              pending: appList.filter((a) => a.status === "pending").length,
             },
           });
         }

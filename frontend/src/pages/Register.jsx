@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { User, Mail, Lock, Briefcase, Building } from "lucide-react";
+import { User, Briefcase, Building } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { getErrorMessage } from "../services/api";
 
 export default function Register() {
   const { register } = useAuth();
@@ -32,7 +33,7 @@ export default function Register() {
       toast.success("Account created! Welcome aboard!");
       navigate("/dashboard");
     } catch (err) {
-      toast.error(err.response?.data?.message || "Registration failed");
+      toast.error(getErrorMessage(err, "Registration failed"));
     } finally {
       setLoading(false);
     }

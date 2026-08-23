@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
+import api, { getErrorMessage } from "../services/api";
 import toast from "react-hot-toast";
 import {
   Search,
@@ -69,12 +69,12 @@ export default function Jobs() {
       const params = Object.fromEntries(
         Object.entries(filters).filter(([, v]) => v),
       );
-      const { data } = await axios.get("/api/jobs", { params });
+      const { data } = await api.get("/api/jobs", { params });
       setJobs(data.jobs);
       setTotal(data.total);
       setPages(data.pages);
-    } catch {
-      toast.error("Failed to load jobs");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to load jobs"));
     } finally {
       setLoading(false);
     }
@@ -86,7 +86,7 @@ export default function Jobs() {
 
   useEffect(() => {
     if (user) {
-      axios
+      api
         .get("/api/users/saved-jobs/list")
         .then((r) => setSavedJobs(r.data.map((j) => j._id)))
         .catch(() => {});
@@ -96,13 +96,13 @@ export default function Jobs() {
   const handleSave = async (jobId) => {
     if (!user) return toast.error("Please login to save jobs");
     try {
-      const { data } = await axios.post(`/api/jobs/${jobId}/save`);
+      const { data } = await api.post(`/api/jobs/${jobId}/save`);
       setSavedJobs((prev) =>
         data.saved ? [...prev, jobId] : prev.filter((id) => id !== jobId),
       );
       toast.success(data.message);
-    } catch {
-      toast.error("Failed to save job");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to save job"));
     }
   };
 

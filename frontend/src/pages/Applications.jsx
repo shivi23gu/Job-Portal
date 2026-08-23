@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api, { getErrorMessage } from "../services/api";
 import toast from "react-hot-toast";
 import {
   FileText,
@@ -47,38 +47,63 @@ export default function Applications() {
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    totalPages: 1,
+    totalApplications: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
-  useEffect(() => {
+  const fetchApplications = (pageNum = 1) => {
+    setLoading(true);
     const url =
       user.role === "employer"
-        ? "/api/applications/employer/all"
-        : "/api/applications/my-applications";
-    axios
+        ? `/api/applications/employer/all?page=${pageNum}&limit=20`
+        : `/api/applications/my-applications?page=${pageNum}&limit=20`;
+    api
       .get(url)
-      .then((r) => setApps(r.data))
-      .catch(() => toast.error("Failed to load"))
+      .then((r) => {
+        const appsList = Array.isArray(r.data)
+          ? r.data
+          : r.data?.applications || [];
+        setApps(appsList);
+        if (r.data?.totalPages) {
+          setPagination({
+            totalPages: r.data.totalPages,
+            totalApplications: r.data.totalApplications || appsList.length,
+            hasNextPage: r.data.hasNextPage,
+            hasPreviousPage: r.data.hasPreviousPage,
+          });
+        }
+      })
+      .catch((err) => toast.error(getErrorMessage(err, "Failed to load applications")))
       .finally(() => setLoading(false));
-  }, [user.role]);
+  };
+
+  useEffect(() => {
+    fetchApplications(page);
+  }, [user.role, page]);
 
   const withdraw = async (id) => {
     try {
-      await axios.put(`/api/applications/${id}/withdraw`);
+      await api.put(`/api/applications/${id}/withdraw`);
       setApps((p) =>
         p.map((a) => (a._id === id ? { ...a, status: "withdrawn" } : a)),
       );
       toast.success("Application withdrawn");
-    } catch {
-      toast.error("Failed to withdraw");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to withdraw"));
     }
   };
 
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`/api/applications/${id}/status`, { status });
+      await api.put(`/api/applications/${id}/status`, { status });
       setApps((p) => p.map((a) => (a._id === id ? { ...a, status } : a)));
       toast.success("Status updated");
-    } catch {
-      toast.error("Failed to update status");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to update status"));
     }
   };
 
@@ -331,6 +356,31 @@ export default function Applications() {
                 )}
               </div>
             ))}
+
+            {pagination.totalPages > 1 && (
+              <div className="flex items-center justify-between mt-6 bg-[#111827] border border-[#1e3a5f] rounded-xl p-4">
+                <div className="text-slate-400 text-xs">
+                  Page <span className="text-white font-medium">{page}</span> of{" "}
+                  <span className="text-white font-medium">{pagination.totalPages}</span> ({pagination.totalApplications} applications)
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={!pagination.hasPreviousPage}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="px-3 py-1.5 text-xs rounded-lg border border-[#1e3a5f] text-slate-300 hover:bg-[#1a2744] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    disabled={!pagination.hasNextPage}
+                    onClick={() => setPage((p) => p + 1)}
+                    className="px-3 py-1.5 text-xs rounded-lg border border-[#1e3a5f] text-slate-300 hover:bg-[#1a2744] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

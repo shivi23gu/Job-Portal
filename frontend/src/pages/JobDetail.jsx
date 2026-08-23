@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import api, { getErrorMessage } from "../services/api";
 import toast from "react-hot-toast";
 import {
   MapPin,
@@ -32,16 +32,19 @@ export default function JobDetail() {
   const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
-    axios
+    api
       .get(`/api/jobs/${id}`)
       .then((r) => setJob(r.data))
       .catch(() => navigate("/jobs"))
       .finally(() => setLoading(false));
     if (user) {
-      axios
+      api
         .get("/api/applications/my-applications")
         .then((r) => {
-          setHasApplied(r.data.some((a) => a.job?._id === id));
+          const list = Array.isArray(r.data)
+            ? r.data
+            : r.data?.applications || [];
+          setHasApplied(list.some((a) => a.job?._id === id || a.job === id));
         })
         .catch(() => {});
     }
@@ -49,16 +52,20 @@ export default function JobDetail() {
 
   const handleSave = async () => {
     if (!user) return toast.error("Please login to save");
-    const { data } = await axios.post(`/api/jobs/${id}/save`);
-    setIsSaved(data.saved);
-    toast.success(data.message);
+    try {
+      const { data } = await api.post(`/api/jobs/${id}/save`);
+      setIsSaved(data.saved);
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to save job"));
+    }
   };
 
   const generateCoverLetter = async () => {
     if (!user) return toast.error("Please login");
     setGeneratingCL(true);
     try {
-      const { data } = await axios.post("/api/ai/generate-cover-letter", {
+      const { data } = await api.post("/api/ai/generate-cover-letter", {
         jobTitle: job.title,
         company: job.company,
         jobDescription: job.description,
@@ -71,8 +78,8 @@ export default function JobDetail() {
       });
       setCoverLetter(data.coverLetter);
       toast.success("Cover letter generated!");
-    } catch {
-      toast.error("AI generation failed. Check your API key.");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "AI generation failed. Check your API key."));
     } finally {
       setGeneratingCL(false);
     }
@@ -82,7 +89,7 @@ export default function JobDetail() {
     if (!coverLetter.trim()) return toast.error("Please write a cover letter");
     setApplying(true);
     try {
-      await axios.post("/api/applications", {
+      await api.post("/api/applications", {
         jobId: id,
         coverLetter,
         resume: user?.profile?.resume,
@@ -91,7 +98,7 @@ export default function JobDetail() {
       setShowApplyModal(false);
       setHasApplied(true);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to submit");
+      toast.error(getErrorMessage(err, "Failed to submit application"));
     } finally {
       setApplying(false);
     }

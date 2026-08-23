@@ -90,5 +90,7 @@ jobSchema.index({
   skills: "text",
 });
 jobSchema.index({ location: 1, category: 1, type: 1, status: 1 });
+jobSchema.index({ employer: 1, createdAt: -1 });
+jobSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model("Job", jobSchema);

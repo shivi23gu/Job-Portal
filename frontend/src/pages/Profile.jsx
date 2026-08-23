@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api, { getErrorMessage } from "../services/api";
 import toast from "react-hot-toast";
 import {
   User,
@@ -12,6 +12,8 @@ import {
   Globe,
   Linkedin,
   Github,
+  Zap,
+  GraduationCap,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
@@ -126,11 +128,11 @@ export default function Profile() {
           education: form.education,
         },
       };
-      const { data } = await axios.put("/api/users/profile", payload);
-      updateUser(data);
-      toast.success("Profile saved!");
-    } catch {
-      toast.error("Failed to save profile");
+      const { data } = await api.put("/api/auth/profile", payload);
+      updateUser(data.user || data);
+      toast.success(data.message || "Profile saved!");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to save profile"));
     } finally {
       setLoading(false);
     }

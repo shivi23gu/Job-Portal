@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import api, { getErrorMessage } from "../services/api";
 import toast from "react-hot-toast";
 import { Bookmark, Briefcase } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -10,20 +10,20 @@ export default function SavedJobs() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios
+    api
       .get("/api/users/saved-jobs/list")
       .then((r) => setJobs(r.data))
-      .catch(() => toast.error("Failed to load saved jobs"))
+      .catch((err) => toast.error(getErrorMessage(err, "Failed to load saved jobs")))
       .finally(() => setLoading(false));
   }, []);
 
   const handleUnsave = async (jobId) => {
     try {
-      await axios.post(`/api/jobs/${jobId}/save`);
+      await api.post(`/api/jobs/${jobId}/save`);
       setJobs((p) => p.filter((j) => j._id !== jobId));
       toast.success("Job removed from saved");
-    } catch {
-      toast.error("Failed to remove");
+    } catch (err) {
+      toast.error(getErrorMessage(err, "Failed to remove"));
     }
   };
 
