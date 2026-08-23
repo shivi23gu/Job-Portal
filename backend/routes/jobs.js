@@ -80,18 +80,12 @@ router.get("/", async (req, res, next) => {
       query.featured = true;
     }
 
-    if (minSalary || maxSalary) {
-      query["salary.min"] = {};
+    if (minSalary && !isNaN(Number(minSalary))) {
+      query["salary.min"] = { $gte: Number(minSalary) };
+    }
 
-      if (minSalary && !isNaN(Number(minSalary))) {
-        query["salary.min"].$gte = Number(minSalary);
-      }
-
-      if (maxSalary && !isNaN(Number(maxSalary))) {
-        query["salary.max"] = {
-          $lte: Number(maxSalary),
-        };
-      }
+    if (maxSalary && !isNaN(Number(maxSalary))) {
+      query["salary.max"] = { $lte: Number(maxSalary) };
     }
 
     const sortObj =
@@ -114,6 +108,74 @@ router.get("/", async (req, res, next) => {
       total,
       pages: Math.ceil(total / Number(limit)) || 1,
       currentPage: Number(page),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get(
+  "/employer/my-jobs",
+  auth,
+  isEmployer,
+  async (req, res, next) => {
+    try {
+      const jobs = await Job.find({
+        ...(req.user.role !== "admin" && {
+          employer: req.user._id,
+        }),
+      }).sort({
+        createdAt: -1,
+      });
+
+      res.json(jobs);
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+router.get("/featured/list", async (req, res, next) => {
+  try {
+    const jobs = await Job.find({
+      status: "active",
+      featured: true,
+    })
+      .populate("employer", "name company")
+      .limit(6)
+      .sort({ createdAt: -1 });
+
+    res.json(jobs);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/stats/overview", async (req, res, next) => {
+  try {
+    const totalJobs = await Job.countDocuments({
+      status: "active",
+    });
+
+    const totalCompanies = await Job.distinct("company", {
+      status: "active",
+    });
+
+    const categories = await Job.aggregate([
+      { $match: { status: "active" } },
+      {
+        $group: {
+          _id: "$category",
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { count: -1 } },
+    ]);
+
+    res.json({
+      totalJobs,
+      totalCompanies: totalCompanies.length,
+      categories,
     });
   } catch (err) {
     next(err);
@@ -292,27 +354,6 @@ router.delete("/:id", auth, isEmployer, async (req, res, next) => {
   }
 });
 
-router.get(
-  "/employer/my-jobs",
-  auth,
-  isEmployer,
-  async (req, res, next) => {
-    try {
-      const jobs = await Job.find({
-        ...(req.user.role !== "admin" && {
-          employer: req.user._id,
-        }),
-      }).sort({
-        createdAt: -1,
-      });
-
-      res.json(jobs);
-    } catch (err) {
-      next(err);
-    }
-  }
-);
-
 router.post("/:id/save", auth, async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
@@ -333,53 +374,6 @@ router.post("/:id/save", auth, async (req, res, next) => {
     res.json({
       saved: !isSaved,
       message: isSaved ? "Job unsaved" : "Job saved!",
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get("/featured/list", async (req, res, next) => {
-  try {
-    const jobs = await Job.find({
-      status: "active",
-      featured: true,
-    })
-      .populate("employer", "name company")
-      .limit(6)
-      .sort({ createdAt: -1 });
-
-    res.json(jobs);
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get("/stats/overview", async (req, res, next) => {
-  try {
-    const totalJobs = await Job.countDocuments({
-      status: "active",
-    });
-
-    const totalCompanies = await Job.distinct("company", {
-      status: "active",
-    });
-
-    const categories = await Job.aggregate([
-      { $match: { status: "active" } },
-      {
-        $group: {
-          _id: "$category",
-          count: { $sum: 1 },
-        },
-      },
-      { $sort: { count: -1 } },
-    ]);
-
-    res.json({
-      totalJobs,
-      totalCompanies: totalCompanies.length,
-      categories,
     });
   } catch (err) {
     next(err);

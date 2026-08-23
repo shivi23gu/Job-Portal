@@ -17,7 +17,8 @@ export function AuthProvider({ children }) {
     try {
       const { data } = await api.get("/api/auth/me");
       setUser(data.user || data);
-    } catch {
+    } catch (error) {
+      console.error("Authentication check failed:", error);
       setUser(null);
     } finally {
       setLoading(false);

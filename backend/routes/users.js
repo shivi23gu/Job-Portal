@@ -3,6 +3,18 @@ const router = express.Router();
 const User = require("../models/User");
 const { auth } = require("../middleware/auth");
 
+router.get("/saved-jobs/list", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).populate({
+      path: "savedJobs",
+      match: { status: "active" },
+    });
+    res.json(user.savedJobs);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select(
@@ -16,18 +28,6 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.get("/saved-jobs/list", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).populate({
-      path: "savedJobs",
-      match: { status: "active" },
-    });
-    res.json(user.savedJobs);
-  } catch (err) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
-
 router.put("/profile", auth, async (req, res) => {
   try {
     const { name, profile, company, avatar } = req.body;
@@ -35,9 +35,16 @@ router.put("/profile", auth, async (req, res) => {
     if (!user) return res.status(404).json({ message: "User not found" });
     if (name) user.name = name;
     if (avatar !== undefined) user.avatar = avatar;
-    if (profile) user.profile = { ...user.profile, ...profile };
-    if (company && user.role === "employer")
-      user.company = { ...user.company, ...company };
+    if (profile) {
+      const existingProfile =
+        user.profile?.toObject?.() ?? user.profile ?? {};
+      user.profile = { ...existingProfile, ...profile };
+    }
+    if (company && user.role === "employer") {
+      const existingCompany =
+        user.company?.toObject?.() ?? user.company ?? {};
+      user.company = { ...existingCompany, ...company };
+    }
     await user.save();
     res.json({ user: user.toJSON(), message: "Profile updated successfully" });
   } catch (err) {

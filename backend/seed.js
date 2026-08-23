@@ -23,8 +23,25 @@ const seedData = async () => {
   // Create Employer with schema-compliant company object
   const employer = await User.create({
     name: "TechCorp HR",
+    email: "employer@demo.com",
+    password: "demo123", // Handled by pre('save') bcrypt hook
+    role: "employer",
+    company: {
+      name: "TechCorp",
+      description: "Leading enterprise cloud and AI solutions provider.",
+      website: "https://techcorp.example.com",
+      industry: "Technology",
+      size: "500-1000",
+      location: "Mumbai, India",
+      founded: 2018,
+    },
+  });
+
+  // Also create employer@test.com for test compatibility
+  await User.create({
+    name: "TechCorp HR",
     email: "employer@test.com",
-    password: "password123", // Handled by pre('save') bcrypt hook
+    password: "password123",
     role: "employer",
     company: {
       name: "TechCorp",
@@ -40,8 +57,8 @@ const seedData = async () => {
   // Create Job Seeker with schema-compliant profile
   const seeker = await User.create({
     name: "John Doe",
-    email: "seeker@test.com",
-    password: "password123", // Handled by pre('save') bcrypt hook
+    email: "seeker@demo.com",
+    password: "demo123", // Handled by pre('save') bcrypt hook
     role: "jobseeker",
     profile: {
       title: "Senior Full Stack Engineer",
@@ -67,6 +84,20 @@ const seedData = async () => {
           endDate: new Date("2021-05-01"),
         },
       ],
+    },
+  });
+
+  // Also create seeker@test.com for test compatibility
+  await User.create({
+    name: "John Doe",
+    email: "seeker@test.com",
+    password: "password123",
+    role: "jobseeker",
+    profile: {
+      title: "Senior Full Stack Engineer",
+      bio: "Experienced developer passionate about building scalable React & Node.js web applications.",
+      location: "Bengaluru, India",
+      skills: ["React", "Node.js", "Express", "MongoDB", "TypeScript", "Tailwind CSS"],
     },
   });
 
